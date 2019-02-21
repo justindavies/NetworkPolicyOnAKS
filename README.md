@@ -195,7 +195,7 @@ Deploy the [./allow.yaml](allow.yaml) policy to the cluster.  This will alow com
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: backend-policy
+  name: api-policy
 spec:
   podSelector:
     matchLabels:
