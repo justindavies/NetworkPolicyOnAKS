@@ -60,7 +60,6 @@ az group create --name $RESOURCE_GROUP_NAME --location eastus
 az network vnet create --resource-group $RESOURCE_GROUP_NAME --name myVnet --address-prefixes 10.0.0.0/8 --subnet-name myAKSSubnet --subnet-prefix 10.240.0.0/16
 ```
 
-
 ### Get the virtual network resource ID
 ```bash
 VNET_ID=$(az network vnet show --resource-group $RESOURCE_GROUP_NAME --name myVnet --query id -o tsv)
@@ -119,7 +118,7 @@ kubectl run api --image=nginx --labels app=api --expose --port 80
 ```
 
 
-And not let's test that we can spin up another Container and communicate with the API we just deployed....
+And not let's test that we can spin up another Container and communicate with the API we just deployed. T
 
 ```bash
 kubectl run --rm -it --image=alpine test-np
@@ -161,6 +160,9 @@ Commercial support is available at
 
 Let's deploy a policy to deny all traffic on the Ingress (the Service endpoint).  Apply the [./deny.yaml](deny.yaml) to your cluster.  This will setup a Deny All policy as the ingress component is empty.  This is a deny all, selective allow policy enforcement.
 
+```bash
+kubectl create -f [RootDirectory]/deny.yaml
+```
 
 ```yaml
 kind: NetworkPolicy
@@ -178,9 +180,12 @@ spec:
 
 Re-run the communication test:
 
+Reattach to pod 
 ```bash
-kubectl run --rm -it --image=alpine test-np
+kubectl attach [test-np name] -i -t 
+```
 
+```bash
 wget -qO- --timeout=2 http://api
 ```
 
@@ -190,6 +195,11 @@ wget -qO- --timeout=2 http://api
 # Deploy the allow policy
 
 Deploy the [./allow.yaml](allow.yaml) policy to the cluster.  This will alow communication between apps with the app=api label:
+
+```bash
+kubectl create -f [allow.yaml]
+```
+
 
 ```yaml
 kind: NetworkPolicy
@@ -210,8 +220,21 @@ spec:
 
 ## Retest communications
 Now that the Network Policy has been updated, you can re-run the client container, but *this time* make sure to label the Pod with "api=api":
+List the current pods and display their labels
+```bash
+kubectl get pods --show-labels 
+```
+
+Add label to test-np pod
+```bash
+kubectl label pod [test-np name] app=api
+```
+
+Rerun show labels to check its taken the new label
+```bash
+kubectl get pods --show-labels 
+```
 
 ```bash
-kubectl run --rm -it --image=alpine --labels app=api test-np
 wget -qO- --timeout=2 http://api
 ```
